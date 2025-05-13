@@ -671,29 +671,31 @@ class QASMToMLIRVisitor:
         theta, phi, lam = map(float, instr_op.params)
         r, i = self.qubit_info[qargs[0]]
         # constants
-        cθ = ConstFloatOp(self.func.value_map, theta, MLIRType("f64"))
-        cφ = ConstFloatOp(self.func.value_map, phi, MLIRType("f64"))
-        cλ = ConstFloatOp(self.func.value_map, lam, MLIRType("f64"))
-        self.func.block.add_op(cθ)
-        self.func.block.add_op(cφ)
-        self.func.block.add_op(cλ)
-        self.func.block.add_op(QIRU3Op(self.func.value_map, self.get_qubit(r, i), cθ.results[0], cφ.results[0], cλ.results[0]))
+        ctheta = ConstFloatOp(self.func.value_map, theta, MLIRType("f64"))
+        csigma = ConstFloatOp(self.func.value_map, phi, MLIRType("f64"))
+        clambda = ConstFloatOp(self.func.value_map, lam, MLIRType("f64"))
+        self.func.block.add_op(ctheta)
+        self.func.block.add_op(csigma)
+        self.func.block.add_op(clambda)
+        self.func.block.add_op(
+            QIRU3Op(self.func.value_map, self.get_qubit(r, i), ctheta.results[0], csigma.results[0], clambda.results[0])
+        )
 
     def visit_u2(self, instr_op: U2Gate, qargs, cargs):
         phi, lam = map(float, instr_op.params)
         r, i = self.qubit_info[qargs[0]]
-        cφ = ConstFloatOp(self.func.value_map, phi, MLIRType("f64"))
-        cλ = ConstFloatOp(self.func.value_map, lam, MLIRType("f64"))
-        self.func.block.add_op(cφ)
-        self.func.block.add_op(cλ)
-        self.func.block.add_op(QIRU2Op(self.func.value_map, self.get_qubit(r, i), cφ.results[0], cλ.results[0]))
+        csigma = ConstFloatOp(self.func.value_map, phi, MLIRType("f64"))
+        clambda = ConstFloatOp(self.func.value_map, lam, MLIRType("f64"))
+        self.func.block.add_op(csigma)
+        self.func.block.add_op(clambda)
+        self.func.block.add_op(QIRU2Op(self.func.value_map, self.get_qubit(r, i), csigma.results[0], clambda.results[0]))
 
     def visit_u1(self, instr_op: U1Gate, qargs, cargs):
         lam = float(instr_op.params[0])
         r, i = self.qubit_info[qargs[0]]
-        cλ = ConstFloatOp(self.func.value_map, lam, MLIRType("f64"))
-        self.func.block.add_op(cλ)
-        self.func.block.add_op(QIRU1Op(self.func.value_map, self.get_qubit(r, i), cλ.results[0]))
+        clambda = ConstFloatOp(self.func.value_map, lam, MLIRType("f64"))
+        self.func.block.add_op(clambda)
+        self.func.block.add_op(QIRU1Op(self.func.value_map, self.get_qubit(r, i), clambda.results[0]))
 
     def visit_s(self, instr_op: SGate, qargs, cargs):
         r, i = self.qubit_info[qargs[0]]
@@ -715,17 +717,17 @@ class QASMToMLIRVisitor:
         angle = float(instr_op.params[0])
         r1, i1 = self.qubit_info[qargs[0]]
         r2, i2 = self.qubit_info[qargs[1]]
-        cθ = ConstFloatOp(self.func.value_map, angle, MLIRType("f64"))
-        self.func.block.add_op(cθ)
-        self.func.block.add_op(QIRCRzOp(self.func.value_map, self.get_qubit(r1, i1), self.get_qubit(r2, i2), cθ.results[0]))
+        ctheta = ConstFloatOp(self.func.value_map, angle, MLIRType("f64"))
+        self.func.block.add_op(ctheta)
+        self.func.block.add_op(QIRCRzOp(self.func.value_map, self.get_qubit(r1, i1), self.get_qubit(r2, i2), ctheta.results[0]))
 
     def visit_cry(self, instr_op: CRYGate, qargs, cargs):
         angle = float(instr_op.params[0])
         r1, i1 = self.qubit_info[qargs[0]]
         r2, i2 = self.qubit_info[qargs[1]]
-        cθ = ConstFloatOp(self.func.value_map, angle, MLIRType("f64"))
-        self.func.block.add_op(cθ)
-        self.func.block.add_op(QIRCRyOp(self.func.value_map, self.get_qubit(r1, i1), self.get_qubit(r2, i2), cθ.results[0]))
+        ctheta = ConstFloatOp(self.func.value_map, angle, MLIRType("f64"))
+        self.func.block.add_op(ctheta)
+        self.func.block.add_op(QIRCRyOp(self.func.value_map, self.get_qubit(r1, i1), self.get_qubit(r2, i2), ctheta.results[0]))
 
     def visit_swap(self, instr_op: SwapGate, qargs: list[Any], cargs: list[Any]) -> None:
         r1, i1 = self.qubit_info[qargs[0]]
