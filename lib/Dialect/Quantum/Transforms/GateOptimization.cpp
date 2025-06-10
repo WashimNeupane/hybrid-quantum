@@ -34,15 +34,18 @@ struct QuantumOptimisePass
 };
 
 /// Pattern: Drop phase gates immediately before measurement
-struct DropPhaseBeforeMeasure : OpRewritePattern<ZOp> {
-    using OpRewritePattern<ZOp>::OpRewritePattern;
+template<typename PhaseOp>
+struct DropPhaseBeforeMeasure : OpRewritePattern<PhaseOp> {
+    using OpRewritePattern<PhaseOp>::OpRewritePattern;
 
     LogicalResult
-    matchAndRewrite(ZOp zOp, PatternRewriter &rewriter) const override
+    matchAndRewrite(PhaseOp op, PatternRewriter &rewriter) const override
     {
-        auto userOp = *zOp.getResult().getUsers().begin();
-        if (auto measureOp = dyn_cast<MeasureOp>(userOp)) {
-            rewriter.replaceOp(zOp, zOp.getInput());
+        if (!op.getResult().hasOneUse()) return failure();
+
+        Operation* userOp = *op.getResult().getUsers();
+        if (isa<MeasureOp>(userOp)) {
+            rewriter.replaceOp(op, op.getInput());
             return success();
         }
         return failure();
@@ -61,7 +64,11 @@ void QuantumOptimisePass::runOnOperation()
 
 void mlir::quantum::populateQuantumOptimisePatterns(RewritePatternSet &patterns)
 {
-    patterns.add<DropPhaseBeforeMeasure>(patterns.getContext());
+    patterns.add<DropPhaseBeforeMeasure<ZOp>>(patterns.getContext());
+    patterns.add<DropPhaseBeforeMeasure<SOp>>(patterns.getContext());
+    patterns.add<DropPhaseBeforeMeasure<TOp>>(patterns.getContext());
+    patterns.add<DropPhaseBeforeMeasure<SdgOp>>(patterns.getContext());
+    patterns.add<DropPhaseBeforeMeasure<TdgOp>>(patterns.getContext());
 }
 
 std::unique_ptr<Pass> mlir::quantum::createQuantumOptimisePass()
